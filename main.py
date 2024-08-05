@@ -77,8 +77,7 @@ def tracePredictedPath(frame, posListX, posListY):
 PATH = 'NEAVid2.mov'
 traceContoursOnVideo(PATH)
 
-# i want to add a thing which looks at the last position of the ball
-# using the last position of the ball it can choose the contour closest to it
-# and then it can find the new position of the ball
-# this way we can track the ball
+# i want to be able to determine if the ball is going to go in the hoop or not
+# detect when a shot starts and when a new shot is taken
+# record made and taken shots
 
