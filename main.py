@@ -41,6 +41,9 @@ def traceContoursOnVideo(videoPath):
     hoopMaxHeight = min(hoopLeft[1], hoopRight[1]) # pixels are counted from the top to the bottom so the max height is a lower y value
     hoopAverageHeight = (hoopLeft[1] + hoopRight[1]) / 2
     hoopMinHeight = max(hoopLeft[1], hoopRight[1])
+
+    fga = 0
+    fgm = 0
     while (cap.isOpened()):
         ret, frame = cap.read()
 
@@ -50,11 +53,18 @@ def traceContoursOnVideo(videoPath):
             cv2.circle(frame, hoopRight, 10, (0, 0, 255), cv2.FILLED)
             cv2.line(frame, (hoopLeft[0],hoopMinHeight), hoopRight, (0, 0, 255), 2)
             if center is not None:
-                if center[1] < hoopMinHeight:
+                if center[1] <= (hoopMinHeight + radius * 4):
                     posListX.append(center[0])
                     posListY.append(center[1])
             if len(posListX) > 3:
                 if(posListY[-1] > hoopMinHeight):
+                    averageXOfLast2 = (posListX[-1] + posListX[-2]) / 2
+                    if(hoopLeft[0] < averageXOfLast2 < hoopRight[0]):
+                        fgm += 1
+                        print("make")
+                    fga += 1
+                    print(f"FGM: {fgm}, FGA: {fga}, FG%: {100 * fgm/fga}")
+
                     posListX.clear()
                     posListY.clear()
                 else:
