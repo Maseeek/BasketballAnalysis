@@ -38,6 +38,9 @@ def traceContoursOnVideo(videoPath):
     posListY = []
     cap = cv2.VideoCapture(videoPath)
     hoopLeft, hoopRight = getHoopCoordinates(cap.read()[1])
+    hoopMaxHeight = min(hoopLeft[1], hoopRight[1]) # pixels are counted from the top to the bottom so the max height is a lower y value
+    hoopAverageHeight = (hoopLeft[1] + hoopRight[1]) / 2
+    hoopMinHeight = max(hoopLeft[1], hoopRight[1])
     while (cap.isOpened()):
         ret, frame = cap.read()
 
@@ -45,11 +48,17 @@ def traceContoursOnVideo(videoPath):
             center, radius = findBasketballCenter(frame)
             cv2.circle(frame, hoopLeft, 10, (0, 0, 255), cv2.FILLED)
             cv2.circle(frame, hoopRight, 10, (0, 0, 255), cv2.FILLED)
+            cv2.line(frame, (hoopLeft[0],hoopMinHeight), hoopRight, (0, 0, 255), 2)
             if center is not None:
-                posListX.append(center[0])
-                posListY.append(center[1])
+                if center[1] < hoopMinHeight:
+                    posListX.append(center[0])
+                    posListY.append(center[1])
             if len(posListX) > 3:
-                tracePredictedPath(frame, posListX, posListY)
+                if(posListY[-1] > hoopMinHeight):
+                    posListX.clear()
+                    posListY.clear()
+                else:
+                    tracePredictedPath(frame, posListX, posListY)
 
             cv2.imshow('frame', frame)
             if cv2.waitKey(100) & 0xFF == ord('q'):
