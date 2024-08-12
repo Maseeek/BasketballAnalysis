@@ -82,7 +82,7 @@ def traceContoursOnVideo(videoPath):
                     tracePredictedPath(frame, posListX, posListY)
 
             cv2.imshow('frame', frame)
-            if cv2.waitKey(0) & 0xFF == ord('q'):
+            if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
         else:
             break
@@ -144,7 +144,7 @@ def main():
 
 
 #PATH = r'E:\Youtube\tiktoks\footage\day 95\PXL_20231016_155547429.TS.mp4'
-PATH = r"C:\Users\Maseeek\Downloads\Untitled video - Made with Clipchamp (1).mp4"
+PATH = r"E:\Youtube\tiktoks\footage\10 freethrows\PXL_20240812_183026929.TS.mp4"
 traceContoursOnVideo(PATH)
 
 # i want to be able to determine if the ball is going to go in the hoop or not
