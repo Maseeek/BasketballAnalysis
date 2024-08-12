@@ -37,14 +37,20 @@ def traceContoursOnVideo(videoPath):
     posListX = []
     posListY = []
     cap = cv2.VideoCapture(videoPath)
+    hoopLeft, hoopRight = getHoopCoordinates(cap.read()[1])
     while (cap.isOpened()):
         ret, frame = cap.read()
+
         if ret:
             center, radius = findBasketballCenter(frame)
+            cv2.circle(frame, hoopLeft, 10, (0, 0, 255), cv2.FILLED)
+            cv2.circle(frame, hoopRight, 10, (0, 0, 255), cv2.FILLED)
             if center is not None:
                 posListX.append(center[0])
                 posListY.append(center[1])
+            if len(posListX) > 3:
                 tracePredictedPath(frame, posListX, posListY)
+
             cv2.imshow('frame', frame)
             if cv2.waitKey(100) & 0xFF == ord('q'):
                 break
@@ -70,7 +76,38 @@ def tracePredictedPath(frame, posListX, posListY):
         cv2.circle(frame, (x, y), 2, (255, 0, 255), cv2.FILLED)
     cv2.imshow('frame', frame)
 
+def getXandYValuesOfClick(frame, windowName):
+    # function to detect mouse clicks
+    def mouseClick(event, x, y, flags, param):
+        nonlocal click_x, click_y, clicked
+        if event == cv2.EVENT_LBUTTONDOWN:
+            click_x, click_y = x, y
+            clicked = True
 
+    clicked = False
+    click_x, click_y = -1, -1
+
+    # creates a window for user to click
+    cv2.namedWindow(windowName)
+    cv2.setMouseCallback(windowName, mouseClick)
+
+    # displays image
+    cv2.imshow(windowName, frame)
+
+    while not clicked:
+        cv2.waitKey(1)  # waits until the screen is clicked
+
+    cv2.destroyAllWindows()
+
+    return click_x, click_y
+
+def getHoopCoordinates(frame):
+    hoopLeft = getXandYValuesOfClick(frame, "Left Side of Hoop")
+    hoopRight = getXandYValuesOfClick(frame, "Right Side of Hoop")
+    return hoopLeft, hoopRight
+def main():
+    videoPath = 'NEAVid2.mov'
+    traceContoursOnVideo(videoPath)
 
 
 #PATH = r'E:\Youtube\tiktoks\footage\day 95\PXL_20231016_155547429.TS.mp4'
