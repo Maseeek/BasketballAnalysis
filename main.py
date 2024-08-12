@@ -44,20 +44,28 @@ def traceContoursOnVideo(videoPath):
 
     fga = 0
     fgm = 0
+
+    cooldown = 0
+
     while (cap.isOpened()):
         ret, frame = cap.read()
 
         if ret:
+
+
             center, radius = findBasketballCenter(frame)
             cv2.circle(frame, hoopLeft, 10, (0, 0, 255), cv2.FILLED)
             cv2.circle(frame, hoopRight, 10, (0, 0, 255), cv2.FILLED)
             cv2.line(frame, (hoopLeft[0],hoopMinHeight), hoopRight, (0, 0, 255), 2)
             if center is not None:
-                if center[1] <= (hoopMinHeight + radius * 4):
+                if center[1] <= (hoopMinHeight + radius * 4) and cooldown == 0:
                     posListX.append(center[0])
                     posListY.append(center[1])
+                    if center[1] < hoopMinHeight:
+                        shotInProgress = True
+                        cv2.putText(frame, "Shot in Progress", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
             if len(posListX) > 3:
-                if(posListY[-1] > hoopMinHeight):
+                if(posListY[-1] > hoopMinHeight and shotInProgress):
                     averageXOfLast2 = (posListX[-1] + posListX[-2]) / 2
                     if(hoopLeft[0] < averageXOfLast2 < hoopRight[0]):
                         fgm += 1
@@ -67,14 +75,20 @@ def traceContoursOnVideo(videoPath):
 
                     posListX.clear()
                     posListY.clear()
+
+                    shotInProgress = False
+                    cooldown = 30
                 else:
                     tracePredictedPath(frame, posListX, posListY)
 
             cv2.imshow('frame', frame)
-            if cv2.waitKey(100) & 0xFF == ord('q'):
+            if cv2.waitKey(0) & 0xFF == ord('q'):
                 break
         else:
             break
+
+        if cooldown > 0:
+            cooldown -= 1
 
     cap.release()
     cv2.destroyAllWindows()
@@ -130,7 +144,7 @@ def main():
 
 
 #PATH = r'E:\Youtube\tiktoks\footage\day 95\PXL_20231016_155547429.TS.mp4'
-PATH = 'NEAVid2.mov'
+PATH = r"C:\Users\Maseeek\Downloads\Untitled video - Made with Clipchamp (1).mp4"
 traceContoursOnVideo(PATH)
 
 # i want to be able to determine if the ball is going to go in the hoop or not
