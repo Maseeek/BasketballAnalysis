@@ -7,7 +7,7 @@ def findBasketballCenter(frame):
     grayFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     blurredFrame = cv2.GaussianBlur(grayFrame, (17, 17), 0)
     edges = cv2.Canny(blurredFrame, 30, 100)
-    cv2.imshow('edges', edges)
+    #cv2.imshow('edges', edges)
     contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     center = None
     radius = 0
@@ -35,9 +35,12 @@ def findBasketballCenter(frame):
 def get_video_path():
     root = tk.Tk()
     root.withdraw()
-    file_path = filedialog.askopenfilename(title="Select Video File", filetypes=[("Video Files", "*.mp4;*.avi")])
+    file_path = filedialog.askopenfilename(title="Select Video File", filetypes=[("Video Files", "*.mp4;*.avi;*.mov")])
     return file_path
-
+def drawHoop(frame, hoopLeft, hoopRight):
+    cv2.circle(frame, hoopLeft, 10, (0, 0, 255), cv2.FILLED)
+    cv2.circle(frame, hoopRight, 10, (0, 0, 255), cv2.FILLED)
+    cv2.line(frame, hoopLeft, hoopRight, (0, 0, 255), 2)
 def traceContoursOnVideo(videoPath):
     posListX = []
     posListY = []
@@ -62,9 +65,7 @@ def traceContoursOnVideo(videoPath):
 
 
             center, radius = findBasketballCenter(frame)
-            cv2.circle(frame, hoopLeft, 10, (0, 0, 255), cv2.FILLED)
-            cv2.circle(frame, hoopRight, 10, (0, 0, 255), cv2.FILLED)
-            cv2.line(frame, (hoopLeft[0],hoopMinHeight), hoopRight, (0, 0, 255), 2)
+            drawHoop(frame, hoopLeft, hoopRight)
             if center is not None:
                 if center[1] <= (hoopMinHeight + radius * 4) and cooldown == 0:
                     posListX.append(center[0])
@@ -149,10 +150,10 @@ def getHoopCoordinates(frame):
     return hoopLeft, hoopRight
 
 chooseVideo = True
+PATH = r"E:\Youtube\tiktoks\footage\10 freethrows\PXL_20240812_183026929.TS.mp4"
 if chooseVideo:
     PATH = get_video_path()
-#PATH = r'E:\Youtube\tiktoks\footage\day 95\PXL_20231016_155547429.TS.mp4'
-PATH = r"E:\Youtube\tiktoks\footage\10 freethrows\PXL_20240812_183026929.TS.mp4"
+
 traceContoursOnVideo(PATH)
 
 # i want to be able to determine if the ball is going to go in the hoop or not
