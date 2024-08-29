@@ -3,11 +3,12 @@ import numpy as np
 import tkinter as tk
 from tkinter import filedialog
 
+
 def findBasketballCenter(frame):
     grayFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     blurredFrame = cv2.GaussianBlur(grayFrame, (17, 17), 0)
     edges = cv2.Canny(blurredFrame, 30, 100)
-    #cv2.imshow('edges', edges)
+    # cv2.imshow('edges', edges)
     contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     center = None
     radius = 0
@@ -32,21 +33,27 @@ def findBasketballCenter(frame):
 
     return center, radius
 
+
 def get_video_path():
     root = tk.Tk()
     root.withdraw()
     file_path = filedialog.askopenfilename(title="Select Video File", filetypes=[("Video Files", "*.mp4;*.avi;*.mov")])
     return file_path
+
+
 def drawHoop(frame, hoopLeft, hoopRight):
     cv2.circle(frame, hoopLeft, 10, (0, 0, 255), cv2.FILLED)
     cv2.circle(frame, hoopRight, 10, (0, 0, 255), cv2.FILLED)
     cv2.line(frame, hoopLeft, hoopRight, (0, 0, 255), 2)
-def traceContoursOnVideo(videoPath):
+
+
+def main(videoPath):
+    shots = []
     posListX = []
     posListY = []
     cap = cv2.VideoCapture(videoPath)
     hoopLeft, hoopRight = getHoopCoordinates(cap.read()[1])
-    hoopMaxHeight = min(hoopLeft[1], hoopRight[1]) # pixels are counted from the top to the bottom so the max height is a lower y value
+    hoopMaxHeight = min(hoopLeft[1], hoopRight[1])  # pixels are counted from the top to the bottom so the max height is a lower y value
     hoopAverageHeight = (hoopLeft[1] + hoopRight[1]) / 2
     hoopMinHeight = max(hoopLeft[1], hoopRight[1])
 
@@ -57,12 +64,11 @@ def traceContoursOnVideo(videoPath):
 
     while (cap.isOpened()):
         ret, frame = cap.read()
-        if(fga != 0):
+        if (fga != 0):
             cv2.putText(frame, f"FGM: {fgm}, FGA: {fga}, FG%: {100 * fgm / fga}", (50, 100), cv2.FONT_HERSHEY_SIMPLEX,
                         1, (0, 255, 0), 2, cv2.LINE_AA)
 
         if ret:
-
 
             center, radius = findBasketballCenter(frame)
             drawHoop(frame, hoopLeft, hoopRight)
@@ -72,16 +78,22 @@ def traceContoursOnVideo(videoPath):
                     posListY.append(center[1])
                     if center[1] < hoopMinHeight:
                         shotInProgress = True
-                        cv2.putText(frame, "Shot in Progress", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+                        cv2.putText(frame, "Shot in Progress", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2,
+                                    cv2.LINE_AA)
             if len(posListX) > 3:
-                if(posListY[-1] > hoopMinHeight and shotInProgress):
+                if (posListY[-1] > hoopMinHeight and shotInProgress):
                     averageXOfLast2 = (posListX[-1] + posListX[-2]) / 2
-                    if(hoopLeft[0] < averageXOfLast2 < hoopRight[0]):
+                    if (hoopLeft[0] < averageXOfLast2 < hoopRight[0]):
+                        shots.append(1)
                         fgm += 1
                         print("make")
+                    else:
+                        shots.append(0)
                     fga += 1
 
-                    print(f"FGM: {fgm}, FGA: {fga}, FG%: {100 * fgm/fga}")
+
+                    print(f"FGM: {fgm}, FGA: {fga}, FG%: {100 * fgm / fga}")
+
 
                     posListX.clear()
                     posListY.clear()
@@ -102,9 +114,11 @@ def traceContoursOnVideo(videoPath):
 
     cap.release()
     cv2.destroyAllWindows()
+    print(f"Longest Streak: {getLongestStreak(shots)}")
+
 
 def tracePredictedPath(frame, posListX, posListY):
-    A,B,C = np.polyfit(posListX, posListY, 2)
+    A, B, C = np.polyfit(posListX, posListY, 2)
     widthOfFrame = frame.shape[1]
     xList = [item for item in range(widthOfFrame)]
     for i, (posX, posY) in enumerate(zip(posListX, posListY)):
@@ -115,10 +129,21 @@ def tracePredictedPath(frame, posListX, posListY):
         else:
             cv2.line(frame, pos, (posListX[i - 1], posListY[i - 1]), (0, 255, 0), 5)
     for x in xList:
-        y= int(A * x ** 2 + B * x + C)
+        y = int(A * x ** 2 + B * x + C)
         cv2.circle(frame, (x, y), 2, (255, 0, 255), cv2.FILLED)
     cv2.imshow('frame', frame)
 
+def getLongestStreak(array):
+    longestStreak = 0
+    currentStreak = 0
+    for i in range(len(array)):
+        if array[i] == 1:
+            currentStreak += 1
+            if currentStreak > longestStreak:
+                longestStreak = currentStreak
+        else:
+            currentStreak = 0
+    return longestStreak
 def getXandYValuesOfClick(frame, windowName):
     # function to detect mouse clicks
     def mouseClick(event, x, y, flags, param):
@@ -144,19 +169,18 @@ def getXandYValuesOfClick(frame, windowName):
 
     return click_x, click_y
 
+
 def getHoopCoordinates(frame):
     hoopLeft = getXandYValuesOfClick(frame, "Left Side of Hoop")
     hoopRight = getXandYValuesOfClick(frame, "Right Side of Hoop")
     return hoopLeft, hoopRight
 
-chooseVideo = True
+
+chooseVideo = False
 PATH = r"E:\Youtube\tiktoks\footage\10 freethrows\PXL_20240812_183026929.TS.mp4"
 if chooseVideo:
     PATH = get_video_path()
 
-traceContoursOnVideo(PATH)
+main(PATH)
 
-# i want to be able to determine if the ball is going to go in the hoop or not
-# detect when a shot starts and when a new shot is taken
-# record made and taken shots
-
+# record made and taken shots DONE
