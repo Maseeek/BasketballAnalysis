@@ -31,72 +31,62 @@ def findBasketballCenter(frame):
 
     return center, radius
 
-def drawHoop(frame, hoopLeft, hoopRight):
-    cv2.circle(frame, hoopLeft, 10, (0, 0, 255), cv2.FILLED)
-    cv2.circle(frame, hoopRight, 10, (0, 0, 255), cv2.FILLED)
-    cv2.line(frame, hoopLeft, hoopRight, (0, 0, 255), 2)
 
-
-def process_frame(frame, hoopLeft, hoopRight, hoopMinHeight, posListX, posListY, cooldown):
-    center, radius = findBasketballCenter(frame)
-    drawHoop(frame, hoopLeft, hoopRight)
-    shotInProgress = False
-
-    if center is not None:
-        if center[1] <= (hoopMinHeight + radius * 4) and cooldown == 0:
-            posListX.append(center[0])
-            posListY.append(center[1])
-            if center[1] < hoopMinHeight:
-                shotInProgress = True
-                cv2.putText(frame, "Shot in Progress", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
-    return center, radius, shotInProgress
-
-def update_shot_status(posListX, posListY, hoopLeft, hoopRight, hoopMinHeight, fgm, fga, shotInProgress, cooldown, frame):
-    if len(posListX) > 3:
-        if posListY[-1] > hoopMinHeight and shotInProgress:
-            averageXOfLast2 = (posListX[-1] + posListX[-2]) / 2
-            if hoopLeft[0] < averageXOfLast2 < hoopRight[0]:
-                fgm += 1
-                print("make")
-            fga += 1
-            print(f"FGM: {fgm}, FGA: {fga}, FG%: {100 * fgm / fga}")
-
-            posListX.clear()
-            posListY.clear()
-            shotInProgress = False
-            cooldown = 30
-        else:
-            tracePredictedPath(frame, posListX, posListY)
-    return fgm, fga, shotInProgress, cooldown
-def display_frame(frame):
-    cv2.imshow('frame', frame)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        return False
-    return True
 
 def traceContoursOnVideo(videoPath):
     posListX = []
     posListY = []
     cap = cv2.VideoCapture(videoPath)
     hoopLeft, hoopRight = getHoopCoordinates(cap.read()[1])
-    hoopMaxHeight = min(hoopLeft[1], hoopRight[1])
+    hoopMaxHeight = min(hoopLeft[1], hoopRight[1]) # pixels are counted from the top to the bottom so the max height is a lower y value
     hoopAverageHeight = (hoopLeft[1] + hoopRight[1]) / 2
     hoopMinHeight = max(hoopLeft[1], hoopRight[1])
 
     fga = 0
     fgm = 0
+
     cooldown = 0
 
-    while cap.isOpened():
+    while (cap.isOpened()):
         ret, frame = cap.read()
-        if fga != 0:
-            cv2.putText(frame, f"FGM: {fgm}, FGA: {fga}, FG%: {100 * fgm / fga}", (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+        if(fga != 0):
+            cv2.putText(frame, f"FGM: {fgm}, FGA: {fga}, FG%: {100 * fgm / fga}", (50, 100), cv2.FONT_HERSHEY_SIMPLEX,
+                        1, (0, 255, 0), 2, cv2.LINE_AA)
 
         if ret:
-            center, radius, shotInProgress = process_frame(frame, hoopLeft, hoopRight, hoopMinHeight, posListX, posListY, cooldown)
-            fgm, fga, shotInProgress, cooldown = update_shot_status(posListX, posListY, hoopLeft, hoopRight, hoopMinHeight, fgm, fga, shotInProgress, cooldown, frame)
 
-            if not display_frame(frame):
+
+            center, radius = findBasketballCenter(frame)
+            cv2.circle(frame, hoopLeft, 10, (0, 0, 255), cv2.FILLED)
+            cv2.circle(frame, hoopRight, 10, (0, 0, 255), cv2.FILLED)
+            cv2.line(frame, (hoopLeft[0],hoopMinHeight), hoopRight, (0, 0, 255), 2)
+            if center is not None:
+                if center[1] <= (hoopMinHeight + radius * 4) and cooldown == 0:
+                    posListX.append(center[0])
+                    posListY.append(center[1])
+                    if center[1] < hoopMinHeight:
+                        shotInProgress = True
+                        cv2.putText(frame, "Shot in Progress", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+            if len(posListX) > 3:
+                if(posListY[-1] > hoopMinHeight and shotInProgress):
+                    averageXOfLast2 = (posListX[-1] + posListX[-2]) / 2
+                    if(hoopLeft[0] < averageXOfLast2 < hoopRight[0]):
+                        fgm += 1
+                        print("make")
+                    fga += 1
+
+                    print(f"FGM: {fgm}, FGA: {fga}, FG%: {100 * fgm/fga}")
+
+                    posListX.clear()
+                    posListY.clear()
+
+                    shotInProgress = False
+                    cooldown = 30
+                else:
+                    tracePredictedPath(frame, posListX, posListY)
+
+            cv2.imshow('frame', frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
         else:
             break
@@ -106,8 +96,9 @@ def traceContoursOnVideo(videoPath):
 
     cap.release()
     cv2.destroyAllWindows()
+
 def tracePredictedPath(frame, posListX, posListY):
-    A, B, C = np.polyfit(posListX, posListY, 2)
+    A,B,C = np.polyfit(posListX, posListY, 2)
     widthOfFrame = frame.shape[1]
     xList = [item for item in range(widthOfFrame)]
     for i, (posX, posY) in enumerate(zip(posListX, posListY)):
@@ -118,7 +109,7 @@ def tracePredictedPath(frame, posListX, posListY):
         else:
             cv2.line(frame, pos, (posListX[i - 1], posListY[i - 1]), (0, 255, 0), 5)
     for x in xList:
-        y = int(A * x ** 2 + B * x + C)
+        y= int(A * x ** 2 + B * x + C)
         cv2.circle(frame, (x, y), 2, (255, 0, 255), cv2.FILLED)
     cv2.imshow('frame', frame)
 
@@ -156,8 +147,8 @@ def main():
     traceContoursOnVideo(videoPath)
 
 
-
-PATH = r"E:\Youtube\tiktoks\footage\10 freethrows\PXL_20240812_181131058.TS.mp4"
+#PATH = r'E:\Youtube\tiktoks\footage\day 95\PXL_20231016_155547429.TS.mp4'
+PATH = r"E:\Youtube\tiktoks\footage\10 freethrows\PXL_20240812_183026929.TS.mp4"
 traceContoursOnVideo(PATH)
 
 # i want to be able to determine if the ball is going to go in the hoop or not
