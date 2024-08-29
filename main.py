@@ -36,14 +36,19 @@ def findBasketballCenter(frame):
 
 def calculateAngle(positionListX, positionListY):
     # Calculate differences in coordinates
-    delta_x = positionListX[1] - positionListX[0]
-    delta_y = positionListY[1] - positionListY[0]
+    try:
+        delta_x = positionListX[1] - positionListX[0]
+        delta_y = positionListY[1] - positionListY[0]
 
-    # Calculate the angle in radians
-    angle_radians = math.atan2(delta_y, delta_x)
+        # Calculate the angle in radians
+        angle_radians = math.atan2(delta_y, delta_x)
 
-    # Convert the angle to degrees
-    angle_degrees = math.degrees(angle_radians)
+        # Convert the angle to degrees
+        angle_degrees = math.degrees(angle_radians)
+        return -angle_degrees
+
+    except:
+        return 0
 
     return -angle_degrees
 
@@ -121,7 +126,7 @@ def main(videoPath):
                     tracePredictedPath(frame, posListX, posListY)
 
             cv2.imshow('frame', frame)
-            if cv2.waitKey(0) & 0xFF == ord('q'):
+            if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
         else:
             break
@@ -132,9 +137,27 @@ def main(videoPath):
     cap.release()
     cv2.destroyAllWindows()
     print(f"Longest Streak: {getLongestStreak(shots)}")
-    print(f"Average Angle: {sum(shotAngles) / len(shotAngles)}")
+    averageAngle, averageMakeAngle, averageMissAngle = calculateAverageAngle(shotAngles, shots)
+    print(f"Average Angle: {averageAngle}, Average Make Angle: {averageMakeAngle}, Average Miss Angle: {averageMissAngle}")
+    print(shotAngles)
 
+def calculateAverageAngle(shotAngles, shots):
+    totalMiss = 0
+    totalMake = 0
+    shotsMadeAngle = []
+    shotsMissedAngle = []
 
+    for i in range(len(shots)):
+        if shots[i] == 1:
+            totalMake += 1
+            shotsMadeAngle.append(shotAngles[i])
+        else:
+            totalMiss += 1
+            shotsMissedAngle.append(shotAngles[i])
+    averageMakeAngle = sum(shotsMadeAngle) / totalMake
+    averageMissAngle = sum(shotsMissedAngle) / totalMiss
+    averageAngle = sum(shotAngles) / len(shotAngles)
+    return averageAngle, averageMakeAngle, averageMissAngle
 def tracePredictedPath(frame, posListX, posListY):
     A, B, C = np.polyfit(posListX, posListY, 2)
     widthOfFrame = frame.shape[1]
