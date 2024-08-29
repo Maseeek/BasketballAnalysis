@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import tkinter as tk
 from tkinter import filedialog
+import math
 
 
 def findBasketballCenter(frame):
@@ -33,6 +34,18 @@ def findBasketballCenter(frame):
 
     return center, radius
 
+def calculateAngle(positionListX, positionListY):
+    # Calculate differences in coordinates
+    delta_x = positionListX[1] - positionListX[0]
+    delta_y = positionListY[1] - positionListY[0]
+
+    # Calculate the angle in radians
+    angle_radians = math.atan2(delta_y, delta_x)
+
+    # Convert the angle to degrees
+    angle_degrees = math.degrees(angle_radians)
+
+    return -angle_degrees
 
 def get_video_path():
     root = tk.Tk()
@@ -49,6 +62,7 @@ def drawHoop(frame, hoopLeft, hoopRight):
 
 def main(videoPath):
     shots = []
+    shotAngles = []
     posListX = []
     posListY = []
     cap = cv2.VideoCapture(videoPath)
@@ -80,19 +94,22 @@ def main(videoPath):
                         shotInProgress = True
                         cv2.putText(frame, "Shot in Progress", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2,
                                     cv2.LINE_AA)
+                        shotAngles.append(calculateAngle(posListX, posListY))
+                        cv2.putText(frame, f"Release Angle: {calculateAngle(posListX, posListY)}", (50, 150),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
             if len(posListX) > 3:
                 if (posListY[-1] > hoopMinHeight and shotInProgress):
                     averageXOfLast2 = (posListX[-1] + posListX[-2]) / 2
                     if (hoopLeft[0] < averageXOfLast2 < hoopRight[0]):
                         shots.append(1)
                         fgm += 1
-                        print("make")
+                        #print("make")
                     else:
                         shots.append(0)
                     fga += 1
 
 
-                    print(f"FGM: {fgm}, FGA: {fga}, FG%: {100 * fgm / fga}")
+                    #print(f"FGM: {fgm}, FGA: {fga}, FG%: {100 * fgm / fga}")
 
 
                     posListX.clear()
@@ -104,7 +121,7 @@ def main(videoPath):
                     tracePredictedPath(frame, posListX, posListY)
 
             cv2.imshow('frame', frame)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            if cv2.waitKey(0) & 0xFF == ord('q'):
                 break
         else:
             break
@@ -115,6 +132,7 @@ def main(videoPath):
     cap.release()
     cv2.destroyAllWindows()
     print(f"Longest Streak: {getLongestStreak(shots)}")
+    print(f"Average Angle: {sum(shotAngles) / len(shotAngles)}")
 
 
 def tracePredictedPath(frame, posListX, posListY):
@@ -183,4 +201,5 @@ if chooseVideo:
 
 main(PATH)
 
-# record made and taken shots DONE
+#modularise the code
+#get angle of the shot
