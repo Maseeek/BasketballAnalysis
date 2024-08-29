@@ -1,12 +1,13 @@
 import cv2
 import numpy as np
-
+import tkinter as tk
+from tkinter import filedialog
 
 def findBasketballCenter(frame):
     grayFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     blurredFrame = cv2.GaussianBlur(grayFrame, (17, 17), 0)
     edges = cv2.Canny(blurredFrame, 30, 100)
-    #cv2.imshow('edges', edges)
+    cv2.imshow('edges', edges)
     contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     center = None
     radius = 0
@@ -31,7 +32,11 @@ def findBasketballCenter(frame):
 
     return center, radius
 
-
+def get_video_path():
+    root = tk.Tk()
+    root.withdraw()
+    file_path = filedialog.askopenfilename(title="Select Video File", filetypes=[("Video Files", "*.mp4;*.avi")])
+    return file_path
 
 def traceContoursOnVideo(videoPath):
     posListX = []
@@ -142,11 +147,10 @@ def getHoopCoordinates(frame):
     hoopLeft = getXandYValuesOfClick(frame, "Left Side of Hoop")
     hoopRight = getXandYValuesOfClick(frame, "Right Side of Hoop")
     return hoopLeft, hoopRight
-def main():
-    videoPath = 'NEAVid2.mov'
-    traceContoursOnVideo(videoPath)
 
-
+chooseVideo = True
+if chooseVideo:
+    PATH = get_video_path()
 #PATH = r'E:\Youtube\tiktoks\footage\day 95\PXL_20231016_155547429.TS.mp4'
 PATH = r"E:\Youtube\tiktoks\footage\10 freethrows\PXL_20240812_183026929.TS.mp4"
 traceContoursOnVideo(PATH)
