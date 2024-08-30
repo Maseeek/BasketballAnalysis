@@ -99,7 +99,7 @@ def main(videoPath):
                         shotInProgress = True
                         cv2.putText(frame, "Shot in Progress", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2,
                                     cv2.LINE_AA)
-                        shotAngles.append(calculateAngle(posListX, posListY))
+
                         cv2.putText(frame, f"Release Angle: {calculateAngle(posListX, posListY)}", (50, 150),
                                     cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
             if len(posListX) > 3:
@@ -116,7 +116,7 @@ def main(videoPath):
 
                     #print(f"FGM: {fgm}, FGA: {fga}, FG%: {100 * fgm / fga}")
 
-
+                    shotAngles.append(calculateAngle(posListX, posListY))
                     posListX.clear()
                     posListY.clear()
 
@@ -142,22 +142,21 @@ def main(videoPath):
     print(shotAngles)
 
 def calculateAverageAngle(shotAngles, shots):
-    totalMiss = 0
-    totalMake = 0
     shotsMadeAngle = []
     shotsMissedAngle = []
 
     for i in range(len(shots)):
         if shots[i] == 1:
-            totalMake += 1
             shotsMadeAngle.append(shotAngles[i])
         else:
-            totalMiss += 1
             shotsMissedAngle.append(shotAngles[i])
-    averageMakeAngle = sum(shotsMadeAngle) / totalMake
-    averageMissAngle = sum(shotsMissedAngle) / totalMiss
-    averageAngle = sum(shotAngles) / len(shotAngles)
-    return averageAngle, averageMakeAngle, averageMissAngle
+    try:
+        averageMakeAngle = sum(shotsMadeAngle) / len(shotsMadeAngle)
+        averageMissAngle = sum(shotsMissedAngle) / len(shotsMissedAngle)
+        averageAngle = sum(shotAngles) / (len(shotsMissedAngle)+len(shotsMadeAngle))
+        return averageAngle, averageMakeAngle, averageMissAngle
+    except:
+        return 0, 0, 0
 def tracePredictedPath(frame, posListX, posListY):
     A, B, C = np.polyfit(posListX, posListY, 2)
     widthOfFrame = frame.shape[1]
