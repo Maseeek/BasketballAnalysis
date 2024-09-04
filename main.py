@@ -6,7 +6,43 @@ import math
 
 dist = lambda x1, y1, x2, y2: (x1-x2)**2 + (y1-y2)**2
 
+def get_video_path():
+    root = tk.Tk()
+    root.withdraw()
+    file_path = filedialog.askopenfilename(title="Select Video File", filetypes=[("Video Files", "*.mp4;*.avi;*.mov")])
+    return file_path
+def getXandYValuesOfClick(frame, windowName):
+    # function to detect mouse clicks
+    def mouseClick(event, x, y, flags, param):
+        nonlocal click_x, click_y, clicked
+        if event == cv2.EVENT_LBUTTONDOWN:
+            click_x, click_y = x, y
+            clicked = True
 
+    clicked = False
+    click_x, click_y = -1, -1
+
+    # creates a window for user to click
+    cv2.namedWindow(windowName)
+    cv2.setMouseCallback(windowName, mouseClick)
+
+    # displays image
+    cv2.imshow(windowName, frame)
+
+    while not clicked:
+        cv2.waitKey(1)  # waits until the screen is clicked
+
+    cv2.destroyAllWindows()
+
+    return click_x, click_y
+def getHoopCoordinates(frame):
+    hoopLeft = getXandYValuesOfClick(frame, "Left Side of Hoop")
+    hoopRight = getXandYValuesOfClick(frame, "Right Side of Hoop")
+    return hoopLeft, hoopRight
+def drawHoop(frame, hoopLeft, hoopRight):
+    cv2.circle(frame, hoopLeft, 10, (0, 0, 255), cv2.FILLED)
+    cv2.circle(frame, hoopRight, 10, (0, 0, 255), cv2.FILLED)
+    cv2.line(frame, hoopLeft, hoopRight, (0, 0, 255), 2)
 
 def calculateAngle(positionListX, positionListY):
     # Calculate differences in coordinates
@@ -29,21 +65,41 @@ def calculateAngle(positionListX, positionListY):
             return 0
     except:
         return 0
+def calculateAverageAngle(shotAngles, shots):
+    shotsMadeAngle = []
+    shotsMissedAngle = []
 
+    for i in range(len(shots)):
+        if (shotAngles[i] != 0):
+            if not abs(sum(shotAngles) / len(shotAngles) - shotAngles[i]) > 2 * sum(shotAngles) / len(shotAngles):
+                if shots[i] == 1:
+                    shotsMadeAngle.append(shotAngles[i])
+                else:
+                    shotsMissedAngle.append(shotAngles[i])
+    try:
+        averageMakeAngle = sum(shotsMadeAngle) / len(shotsMadeAngle)
+        averageMissAngle = sum(shotsMissedAngle) / len(shotsMissedAngle)
+        averageAngle = (sum(shotsMadeAngle)+sum(shotsMissedAngle)) / (len(shotsMissedAngle)+len(shotsMadeAngle))
+        return averageAngle, averageMakeAngle, averageMissAngle
+    except:
+        return 0, 0, 0
+def getLongestStreak(array):
+    longestStreak = 0
+    currentStreak = 0
+    for i in range(len(array)):
+        if array[i] == 1:
+            currentStreak += 1
+            if currentStreak > longestStreak:
+                longestStreak = currentStreak
+        else:
+            currentStreak = 0
+    return longestStreak
 
-
-def get_video_path():
-    root = tk.Tk()
-    root.withdraw()
-    file_path = filedialog.askopenfilename(title="Select Video File", filetypes=[("Video Files", "*.mp4;*.avi;*.mov")])
-    return file_path
-
-
-def drawHoop(frame, hoopLeft, hoopRight):
-    cv2.circle(frame, hoopLeft, 10, (0, 0, 255), cv2.FILLED)
-    cv2.circle(frame, hoopRight, 10, (0, 0, 255), cv2.FILLED)
-    cv2.line(frame, hoopLeft, hoopRight, (0, 0, 255), 2)
-
+def showFrameWithBallCircled(frame, ball):
+    if ball is not None:
+        cv2.circle(frame, (ball[0], ball[1]), ball[2], (0, 255, 0), 2)
+        cv2.putText(frame, f"radius {ball[2]}", (ball[0], ball[1]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+    cv2.waitKey(1)
 def findBall(frame, prevCircle, radius):
     CONSTANT = 1.2
     minRadius = int (radius / CONSTANT)
@@ -62,13 +118,21 @@ def findBall(frame, prevCircle, radius):
                 if(dist(chosen[0], chosen[1], prevCircle[0], prevCircle[1]) <= dist(i[0], i[1], prevCircle[0], prevCircle[1])):
                     chosen = i
     return chosen
-
-def showFrameWithBallCircled(frame, ball):
-    if ball is not None:
-        cv2.circle(frame, (ball[0], ball[1]), ball[2], (0, 255, 0), 2)
-        cv2.putText(frame, f"radius {ball[2]}", (ball[0], ball[1]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
-    cv2.waitKey(1)
-
+def tracePredictedPath(frame, posListX, posListY):
+    A, B, C = np.polyfit(posListX, posListY, 2)
+    widthOfFrame = frame.shape[1]
+    xList = [item for item in range(widthOfFrame)]
+    for i, (posX, posY) in enumerate(zip(posListX, posListY)):
+        pos = (posX, posY)
+        cv2.circle(frame, pos, 10, (0, 255, 0), cv2.FILLED)
+        if i == 0:
+            cv2.line(frame, pos, pos, (0, 255, 0), 5)
+        else:
+            cv2.line(frame, pos, (posListX[i - 1], posListY[i - 1]), (0, 255, 0), 5)
+    for x in xList:
+        y = int(A * x ** 2 + B * x + C)
+        cv2.circle(frame, (x, y), 2, (255, 0, 255), cv2.FILLED)
+    cv2.imshow('frame', frame)
 def main(videoPath):
     shots = []
     shotAngles = []
@@ -151,94 +215,11 @@ def main(videoPath):
     print(f"Longest Streak: {getLongestStreak(shots)}")
     averageAngle, averageMakeAngle, averageMissAngle = calculateAverageAngle(shotAngles, shots)
     print(f"Average Angle: {averageAngle}, Average Make Angle: {averageMakeAngle}, Average Miss Angle: {averageMissAngle}")
-    print(shotAngles)
-
-def isAnOutlier(mean, value):
-    return abs(mean - value) > 2 * mean
-
-def calculateAverageAngle(shotAngles, shots):
-    shotsMadeAngle = []
-    shotsMissedAngle = []
-
-    for i in range(len(shots)):
-        if (shotAngles[i] != 0):
-            if not isAnOutlier(sum(shotAngles) / len(shotAngles), shotAngles[i]):
-                if shots[i] == 1:
-                    shotsMadeAngle.append(shotAngles[i])
-                else:
-                    shotsMissedAngle.append(shotAngles[i])
-    try:
-        averageMakeAngle = sum(shotsMadeAngle) / len(shotsMadeAngle)
-        averageMissAngle = sum(shotsMissedAngle) / len(shotsMissedAngle)
-        averageAngle = (sum(shotsMadeAngle)+sum(shotsMissedAngle)) / (len(shotsMissedAngle)+len(shotsMadeAngle))
-        return averageAngle, averageMakeAngle, averageMissAngle
-    except:
-        return 0, 0, 0
-def tracePredictedPath(frame, posListX, posListY):
-    A, B, C = np.polyfit(posListX, posListY, 2)
-    widthOfFrame = frame.shape[1]
-    xList = [item for item in range(widthOfFrame)]
-    for i, (posX, posY) in enumerate(zip(posListX, posListY)):
-        pos = (posX, posY)
-        cv2.circle(frame, pos, 10, (0, 255, 0), cv2.FILLED)
-        if i == 0:
-            cv2.line(frame, pos, pos, (0, 255, 0), 5)
-        else:
-            cv2.line(frame, pos, (posListX[i - 1], posListY[i - 1]), (0, 255, 0), 5)
-    for x in xList:
-        y = int(A * x ** 2 + B * x + C)
-        cv2.circle(frame, (x, y), 2, (255, 0, 255), cv2.FILLED)
-    cv2.imshow('frame', frame)
-
-def getLongestStreak(array):
-    longestStreak = 0
-    currentStreak = 0
-    for i in range(len(array)):
-        if array[i] == 1:
-            currentStreak += 1
-            if currentStreak > longestStreak:
-                longestStreak = currentStreak
-        else:
-            currentStreak = 0
-    return longestStreak
-def getXandYValuesOfClick(frame, windowName):
-    # function to detect mouse clicks
-    def mouseClick(event, x, y, flags, param):
-        nonlocal click_x, click_y, clicked
-        if event == cv2.EVENT_LBUTTONDOWN:
-            click_x, click_y = x, y
-            clicked = True
-
-    clicked = False
-    click_x, click_y = -1, -1
-
-    # creates a window for user to click
-    cv2.namedWindow(windowName)
-    cv2.setMouseCallback(windowName, mouseClick)
-
-    # displays image
-    cv2.imshow(windowName, frame)
-
-    while not clicked:
-        cv2.waitKey(1)  # waits until the screen is clicked
-
-    cv2.destroyAllWindows()
-
-    return click_x, click_y
-
-
-def getHoopCoordinates(frame):
-    hoopLeft = getXandYValuesOfClick(frame, "Left Side of Hoop")
-    hoopRight = getXandYValuesOfClick(frame, "Right Side of Hoop")
-    return hoopLeft, hoopRight
-
 
 chooseVideo = True
 PATH = r"E:\Youtube\tiktoks\footage\10 freethrows\PXL_20240812_183026929.TS.mp4"
 if chooseVideo:
     PATH = get_video_path()
-
 main(PATH)
 
-#modularise the code
-# make it work for hoop on left side as well as right side. it already works
+
