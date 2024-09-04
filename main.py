@@ -9,7 +9,7 @@ def findBasketballCenter(frame):
     grayFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     blurredFrame = cv2.GaussianBlur(grayFrame, (17, 17), 0)
     edges = cv2.Canny(blurredFrame, 30, 100)
-    # cv2.imshow('edges', edges)
+    cv2.imshow('edges', edges)
     contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     center = None
     radius = 0
@@ -21,8 +21,8 @@ def findBasketballCenter(frame):
         area_circle = np.pi * r * r
 
         # shape factor
-        shape_factor = area_contour / area_circle
 
+        shape_factor = area_contour / area_circle
         # if the shape factor is close to 1, it's likely to be a circle
         if r > radius and 0.8 < shape_factor < 1.2:
             radius = r
@@ -44,13 +44,18 @@ def calculateAngle(positionListX, positionListY):
         angle_radians = math.atan2(delta_y, delta_x)
 
         # Convert the angle to degrees
-        angle_degrees = math.degrees(angle_radians)
-        return -angle_degrees
+        angle_degrees = -math.degrees(angle_radians)
+        if angle_degrees > 90 and angle_degrees < 180:
+            angle_degrees = 180 - angle_degrees
+        if(angle_degrees > 0 and angle_degrees < 90):
+            return angle_degrees
 
+        else:
+            return 0
     except:
         return 0
 
-    return -angle_degrees
+
 
 def get_video_path():
     root = tk.Tk()
@@ -141,19 +146,24 @@ def main(videoPath):
     print(f"Average Angle: {averageAngle}, Average Make Angle: {averageMakeAngle}, Average Miss Angle: {averageMissAngle}")
     print(shotAngles)
 
+def isAnOutlier(mean, value):
+    return abs(mean - value) > 2 * mean
+
 def calculateAverageAngle(shotAngles, shots):
     shotsMadeAngle = []
     shotsMissedAngle = []
 
     for i in range(len(shots)):
-        if shots[i] == 1:
-            shotsMadeAngle.append(shotAngles[i])
-        else:
-            shotsMissedAngle.append(shotAngles[i])
+        if (shotAngles[i] != 0):
+            if not isAnOutlier(sum(shotAngles) / len(shotAngles), shotAngles[i]):
+                if shots[i] == 1:
+                    shotsMadeAngle.append(shotAngles[i])
+                else:
+                    shotsMissedAngle.append(shotAngles[i])
     try:
         averageMakeAngle = sum(shotsMadeAngle) / len(shotsMadeAngle)
         averageMissAngle = sum(shotsMissedAngle) / len(shotsMissedAngle)
-        averageAngle = sum(shotAngles) / (len(shotsMissedAngle)+len(shotsMadeAngle))
+        averageAngle = (sum(shotsMadeAngle)+sum(shotsMissedAngle)) / (len(shotsMissedAngle)+len(shotsMadeAngle))
         return averageAngle, averageMakeAngle, averageMissAngle
     except:
         return 0, 0, 0
@@ -216,7 +226,7 @@ def getHoopCoordinates(frame):
     return hoopLeft, hoopRight
 
 
-chooseVideo = False
+chooseVideo = True
 PATH = r"E:\Youtube\tiktoks\footage\10 freethrows\PXL_20240812_183026929.TS.mp4"
 if chooseVideo:
     PATH = get_video_path()
@@ -224,4 +234,4 @@ if chooseVideo:
 main(PATH)
 
 #modularise the code
-#get angle of the shot
+# make it work for hoop on left side as well as right side. it already works
