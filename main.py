@@ -11,8 +11,8 @@ dist = lambda x1, y1, x2, y2: (x1-x2)**2 + (y1-y2)**2
 def calculateAngle(positionListX, positionListY):
     # Calculate differences in coordinates
     try:
-        delta_x = positionListX[3] - positionListX[0]
-        delta_y = positionListY[3] - positionListY[0]
+        delta_x = positionListX[2] - positionListX[0]
+        delta_y = positionListY[2] - positionListY[0]
 
         # Calculate the angle in radians
         angle_radians = math.atan2(delta_y, delta_x)
@@ -117,7 +117,6 @@ def main(videoPath):
                             angle = calculateAngle(posListX, posListY)
                             cv2.putText(frame, f"Release Angle: {angle}", (50, 150),
                                         cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
-                            print(f"Release Angle: {angle}")
 
             if len(posListX) > 3:
                 if posListY[-1] > hoopMinHeight and shotInProgress:
