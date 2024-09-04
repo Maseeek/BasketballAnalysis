@@ -4,12 +4,13 @@ import tkinter as tk
 from tkinter import filedialog
 import math
 
+dist = lambda x1, y1, x2, y2: (x1-x2)**2 + (y1-y2)**2
 
 def findBasketballCenter(frame):
     grayFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     blurredFrame = cv2.GaussianBlur(grayFrame, (17, 17), 0)
     edges = cv2.Canny(blurredFrame, 30, 100)
-    cv2.imshow('edges', edges)
+    #cv2.imshow('edges', edges)
     contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     center = None
     radius = 0
@@ -69,6 +70,30 @@ def drawHoop(frame, hoopLeft, hoopRight):
     cv2.circle(frame, hoopRight, 10, (0, 0, 255), cv2.FILLED)
     cv2.line(frame, hoopLeft, hoopRight, (0, 0, 255), 2)
 
+def findBall(frame, prevCircle, radius):
+    CONSTANT = 1.2
+    minRadius = int (radius / CONSTANT)
+    maxRadius = int (radius * CONSTANT)
+    chosen = None
+    grayFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    blurredFrame = cv2.GaussianBlur(grayFrame, (17, 17), 0)
+    circles = cv2.HoughCircles(blurredFrame, cv2.HOUGH_GRADIENT, 1.2, 100,
+                               param1=100, param2=30, minRadius=minRadius, maxRadius=maxRadius)
+    if circles is not None:
+        circles = np.uint16(np.around(circles))
+
+        for i in circles[0, :]:
+            if chosen is None: chosen = i
+            if prevCircle is not None:
+                if(dist(chosen[0], chosen[1], prevCircle[0], prevCircle[1]) <= dist(i[0], i[1], prevCircle[0], prevCircle[1])):
+                    chosen = i
+    return chosen
+
+def showFrameWithBallCircled(frame, ball):
+    if ball is not None:
+        cv2.circle(frame, (ball[0], ball[1]), ball[2], (0, 255, 0), 2)
+        cv2.putText(frame, f"radius {ball[2]}", (ball[0], ball[1]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+    cv2.waitKey(1)
 
 def main(videoPath):
     shots = []
@@ -77,6 +102,7 @@ def main(videoPath):
     posListY = []
     cap = cv2.VideoCapture(videoPath)
     hoopLeft, hoopRight = getHoopCoordinates(cap.read()[1])
+    ballRadius = 0.264 * math.sqrt(dist(hoopLeft[0], hoopLeft[1], hoopRight[0], hoopRight[1]))
     hoopMaxHeight = min(hoopLeft[1], hoopRight[1])  # pixels are counted from the top to the bottom so the max height is a lower y value
     hoopAverageHeight = (hoopLeft[1] + hoopRight[1]) / 2
     hoopMinHeight = max(hoopLeft[1], hoopRight[1])
@@ -86,6 +112,11 @@ def main(videoPath):
 
     cooldown = 0
 
+    prevCircle = None
+    center = None
+    shotInProgress = False  # Initialize shotInProgress
+
+
     while (cap.isOpened()):
         ret, frame = cap.read()
         if (fga != 0):
@@ -94,7 +125,13 @@ def main(videoPath):
 
         if ret:
 
-            center, radius = findBasketballCenter(frame)
+            basketball = findBall(frame,prevCircle, ballRadius)
+
+            if basketball is not None:
+                showFrameWithBallCircled(frame, basketball)
+                prevCircle = (basketball[0], basketball[1], basketball[2])
+                center = (basketball[0], basketball[1])
+                radius = basketball[2]
             drawHoop(frame, hoopLeft, hoopRight)
             if center is not None:
                 if center[1] <= (hoopMinHeight + radius * 4) and cooldown == 0:
