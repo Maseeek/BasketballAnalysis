@@ -18,7 +18,7 @@ def calculateAngle(positionListX, positionListY):
         angle_radians = math.atan2(delta_y, delta_x)
 
         # Convert the angle to degrees
-        angle_degrees = -math.degrees(angle_radians)
+        angle_degrees = math.degrees(angle_radians)
         if angle_degrees > 90 and angle_degrees < 180:
             angle_degrees = 180 - angle_degrees
         if(angle_degrees > 0 and angle_degrees < 90):
@@ -136,7 +136,7 @@ def main(videoPath):
                     posListY.clear()
 
                     shotInProgress = False
-                    cooldown = 30
+                    cooldown = 60
                 else:
                     tracePredictedPath(frame, posListX, posListY)
 
