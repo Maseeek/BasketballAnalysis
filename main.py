@@ -130,6 +130,8 @@ def tracePredictedPath(frame, posListX, posListY):
         cv2.circle(frame, (x, y), 2, (255, 0, 255), cv2.FILLED)
     cv2.imshow('frame', frame)
 def main(videoPath):
+
+    # Initialize variables
     shots = []
     shotAngles = []
     posListX = []
@@ -141,12 +143,9 @@ def main(videoPath):
     hoopMaxHeight = min(hoopLeft[1], hoopRight[1])
     hoopAverageHeight = (hoopLeft[1] + hoopRight[1]) / 2
     hoopMinHeight = max(hoopLeft[1], hoopRight[1])
-
     fga = 0
     fgm = 0
-
     cooldown = 0
-
     prevCircle = None
     center = None
     shotInProgress = False
