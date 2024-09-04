@@ -35,10 +35,6 @@ def getXandYValuesOfClick(frame, windowName):
     cv2.destroyAllWindows()
 
     return click_x, click_y
-def getHoopCoordinates(frame):
-    hoopLeft = getXandYValuesOfClick(frame, "Left Side of Hoop")
-    hoopRight = getXandYValuesOfClick(frame, "Right Side of Hoop")
-    return hoopLeft, hoopRight
 def drawHoop(frame, hoopLeft, hoopRight):
     cv2.circle(frame, hoopLeft, 10, (0, 0, 255), cv2.FILLED)
     cv2.circle(frame, hoopRight, 10, (0, 0, 255), cv2.FILLED)
@@ -139,7 +135,8 @@ def main(videoPath):
     posListX = []
     posListY = []
     cap = cv2.VideoCapture(videoPath)
-    hoopLeft, hoopRight = getHoopCoordinates(cap.read()[1])
+    hoopLeft = getXandYValuesOfClick(cap.read()[1], "Left Side of Hoop")
+    hoopRight = getXandYValuesOfClick(cap.read()[1], "Right Side of Hoop")
     ballRadius = 0.264 * math.sqrt(dist(hoopLeft[0], hoopLeft[1], hoopRight[0], hoopRight[1]))
     hoopMaxHeight = min(hoopLeft[1], hoopRight[1])
     hoopAverageHeight = (hoopLeft[1] + hoopRight[1]) / 2
