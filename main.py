@@ -107,7 +107,7 @@ def main(videoPath):
                 radius = basketball[2]
             drawHoop(frame, hoopLeft, hoopRight)
             if center is not None:
-                if center[1] <= (hoopMinHeight + radius * 4) and cooldown == 0:
+                if center[1] <= (hoopMinHeight + radius * 5) and cooldown == 0:
                     posListX.append(center[0])
                     posListY.append(center[1])
                     if center[1] < hoopMinHeight:
