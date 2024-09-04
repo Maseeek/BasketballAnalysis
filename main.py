@@ -11,14 +11,15 @@ dist = lambda x1, y1, x2, y2: (x1-x2)**2 + (y1-y2)**2
 def calculateAngle(positionListX, positionListY):
     # Calculate differences in coordinates
     try:
-        delta_x = positionListX[1] - positionListX[0]
-        delta_y = positionListY[1] - positionListY[0]
+        delta_x = positionListX[3] - positionListX[0]
+        delta_y = positionListY[3] - positionListY[0]
 
         # Calculate the angle in radians
         angle_radians = math.atan2(delta_y, delta_x)
 
         # Convert the angle to degrees
-        angle_degrees = math.degrees(angle_radians)
+        angle_degrees = -math.degrees(angle_radians)
+        #print(f"Angle in degrees: {angle_degrees}, Angle in radians: {angle_radians}, Delta X: {delta_x}, Delta Y: {delta_y}, positionListX: {positionListX[0:2]}, positionListY: {positionListY[0:2]}")
         if angle_degrees > 90 and angle_degrees < 180:
             angle_degrees = 180 - angle_degrees
         if(angle_degrees > 0 and angle_degrees < 90):
@@ -76,7 +77,7 @@ def main(videoPath):
     cap = cv2.VideoCapture(videoPath)
     hoopLeft, hoopRight = getHoopCoordinates(cap.read()[1])
     ballRadius = 0.264 * math.sqrt(dist(hoopLeft[0], hoopLeft[1], hoopRight[0], hoopRight[1]))
-    hoopMaxHeight = min(hoopLeft[1], hoopRight[1])  # pixels are counted from the top to the bottom so the max height is a lower y value
+    hoopMaxHeight = min(hoopLeft[1], hoopRight[1])
     hoopAverageHeight = (hoopLeft[1] + hoopRight[1]) / 2
     hoopMinHeight = max(hoopLeft[1], hoopRight[1])
 
@@ -87,23 +88,20 @@ def main(videoPath):
 
     prevCircle = None
     center = None
-    shotInProgress = False  # Initialize shotInProgress
+    shotInProgress = False
 
-
-    while (cap.isOpened()):
+    while cap.isOpened():
         ret, frame = cap.read()
-        if (fga != 0):
+        if fga != 0:
             cv2.putText(frame, f"FGM: {fgm}, FGA: {fga}, FG%: {100 * fgm / fga}", (50, 100), cv2.FONT_HERSHEY_SIMPLEX,
                         1, (0, 255, 0), 2, cv2.LINE_AA)
 
         if ret:
-
-            basketball = findBall(frame,prevCircle, ballRadius)
-
+            basketball = findBall(frame, prevCircle, ballRadius)
             if basketball is not None:
                 showFrameWithBallCircled(frame, basketball)
                 prevCircle = (basketball[0], basketball[1], basketball[2])
-                center = (basketball[0], basketball[1])
+                center = (int(basketball[0]), int(basketball[1]))
                 radius = basketball[2]
             drawHoop(frame, hoopLeft, hoopRight)
             if center is not None:
@@ -115,28 +113,28 @@ def main(videoPath):
                         cv2.putText(frame, "Shot in Progress", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2,
                                     cv2.LINE_AA)
 
-                        cv2.putText(frame, f"Release Angle: {calculateAngle(posListX, posListY)}", (50, 150),
-                                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+                        if len(posListX) > 1 and len(posListY) > 1:
+                            angle = calculateAngle(posListX, posListY)
+                            cv2.putText(frame, f"Release Angle: {angle}", (50, 150),
+                                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+                            print(f"Release Angle: {angle}")
+
             if len(posListX) > 3:
-                if (posListY[-1] > hoopMinHeight and shotInProgress):
+                if posListY[-1] > hoopMinHeight and shotInProgress:
                     averageXOfLast2 = (posListX[-1] + posListX[-2]) / 2
-                    if (hoopLeft[0] < averageXOfLast2 < hoopRight[0]):
+                    if hoopLeft[0] < averageXOfLast2 < hoopRight[0]:
                         shots.append(1)
                         fgm += 1
-                        #print("make")
                     else:
                         shots.append(0)
                     fga += 1
-
-
-                    #print(f"FGM: {fgm}, FGA: {fga}, FG%: {100 * fgm / fga}")
 
                     shotAngles.append(calculateAngle(posListX, posListY))
                     posListX.clear()
                     posListY.clear()
 
                     shotInProgress = False
-                    cooldown = 60
+                    cooldown = 30
                 else:
                     tracePredictedPath(frame, posListX, posListY)
 
