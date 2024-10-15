@@ -60,22 +60,30 @@ def calculateAngle(positionListX, positionListY):
         else:
             return 0
     except:
-        return 0
+        return 0 # if there is an error or if angle is not within bounds, return 0
 def calculateAverageAngle(shotAngles, shots):
     shotsMadeAngle = []
     shotsMissedAngle = []
 
-    for i in range(len(shots)):
-        if (shotAngles[i] != 0):
+    for i in range(len(shots)): # for each shot
+        if (shotAngles[i] != 0): # as long as the shot angle of the shot is not 0
             if not abs(sum(shotAngles) / len(shotAngles) - shotAngles[i]) > 2 * sum(shotAngles) / len(shotAngles):
                 if shots[i] == 1:
                     shotsMadeAngle.append(shotAngles[i])
                 else:
                     shotsMissedAngle.append(shotAngles[i])
     try:
-        averageMakeAngle = sum(shotsMadeAngle) / len(shotsMadeAngle)
-        averageMissAngle = sum(shotsMissedAngle) / len(shotsMissedAngle)
-        averageAngle = (sum(shotsMadeAngle)+sum(shotsMissedAngle)) / (len(shotsMissedAngle)+len(shotsMadeAngle))
+        averageAngle = (sum(shotsMadeAngle) + sum(shotsMissedAngle)) / (len(shotsMissedAngle) + len(shotsMadeAngle))
+        if not len(shotsMadeAngle) == 0:
+            averageMakeAngle = sum(shotsMadeAngle) / len(shotsMadeAngle)
+        else:
+            averageMakeAngle = 0
+        if not len(shotsMissedAngle) == 0:
+            averageMissAngle = sum(shotsMissedAngle) / len(shotsMissedAngle)
+        else:
+            averageMissAngle = 0
+
+
         return averageAngle, averageMakeAngle, averageMissAngle
     except:
         print("Error in calculating average angle")
@@ -211,6 +219,7 @@ def main(videoPath):
     cv2.destroyAllWindows()
     print(f"Longest Streak: {getLongestStreak(shots)}")
     averageAngle, averageMakeAngle, averageMissAngle = calculateAverageAngle(shotAngles, shots)
+    #print(f"Shot angles {shotAngles} Shots {shots}")
     print(f"Average Angle: {averageAngle}, Average Make Angle: {averageMakeAngle}, Average Miss Angle: {averageMissAngle}")
 
 chooseVideo = True
