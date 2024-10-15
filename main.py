@@ -221,6 +221,7 @@ def main(videoPath):
     averageAngle, averageMakeAngle, averageMissAngle = calculateAverageAngle(shotAngles, shots)
     #print(f"Shot angles {shotAngles} Shots {shots}")
     print(f"Average Angle: {averageAngle}, Average Make Angle: {averageMakeAngle}, Average Miss Angle: {averageMissAngle}")
+    print(f"FGM: {fgm}, FGA: {fga}, FG%: {100 * fgm / fga}")
 
 chooseVideo = True
 PATH = r"E:\Youtube\tiktoks\footage\10 freethrows\PXL_20240812_183026929.TS.mp4"
