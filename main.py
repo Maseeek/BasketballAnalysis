@@ -3,6 +3,7 @@ import numpy as np
 import tkinter as tk
 from tkinter import filedialog
 import math
+import matplotlib.pyplot as plt
 
 dist = lambda x1, y1, x2, y2: (x1-x2)**2 + (y1-y2)**2
 
@@ -138,6 +139,60 @@ def tracePredictedPath(frame, posListX, posListY):
         y = int(A * x ** 2 + B * x + C)
         cv2.circle(frame, (x, y), 2, (255, 0, 255), cv2.FILLED)
     cv2.imshow('frame', frame)
+
+import matplotlib.pyplot as plt
+
+def showResults(shots, shotAngles):
+    # Count the number of makes and misses
+    makes = shots.count(1)
+    misses = shots.count(0)
+
+    # Plot the pie chart with the correct labels
+    fig, axs = plt.subplots(2, 2, figsize=(15, 10))
+
+    # Pie chart
+    axs[0, 0].pie([makes, misses], labels=["Make", "Miss"], autopct='%1.1f%%')
+    axs[0, 0].set_title('Field Goal Makes vs Misses')
+
+    # Bar chart
+    axs[0, 1].bar(['Makes', 'Misses'], [makes, misses], color=['green', 'red'])
+    axs[0, 1].set_title('Shot Distribution')
+    axs[0, 1].set_ylabel('Number of Shots')
+
+    # Line chart for shot angles
+    axs[1, 0].plot(shotAngles, marker='o')
+    axs[1, 0].set_title('Shot Angles Over Time')
+    axs[1, 0].set_xlabel('Shot Number')
+    axs[1, 0].set_ylabel('Angle (degrees)')
+
+    # Histogram for shot angles
+    axs[1, 1].hist(shotAngles, bins=10, color='blue', edgecolor='black')
+    axs[1, 1].set_title('Distribution of Shot Angles')
+    axs[1, 1].set_xlabel('Angle (degrees)')
+    axs[1, 1].set_ylabel('Frequency')
+
+    plt.tight_layout()
+    plt.show()
+
+    # Scatter plot for field goal percentage and shot angles
+    fg_percentages = [100 * sum(shots[:i+1]) / (i+1) for i in range(len(shots))]
+    plt.figure(figsize=(10, 7))
+    plt.scatter(shotAngles, fg_percentages, c='blue', label='FG% vs Angle')
+    plt.xlabel('Shot Angle (degrees)')
+    plt.ylabel('Field Goal Percentage (%)')
+    plt.title('Field Goal Percentage vs Shot Angle')
+    plt.legend()
+    plt.show()
+
+    # Additional textual statistics
+    longest_streak = getLongestStreak(shots)
+    averageAngle, averageMakeAngle, averageMissAngle = calculateAverageAngle(shotAngles, shots)
+    print(f"Longest Streak: {longest_streak}")
+    print(f"Average Angle: {averageAngle:.2f}, Average Make Angle: {averageMakeAngle:.2f}, Average Miss Angle: {averageMissAngle:.2f}")
+    print(f"FGM: {makes}, FGA: {len(shots)}, FG%: {100 * makes / len(shots):.2f}%")
+
+
+
 def main(videoPath):
 
     # Initialize variables
@@ -207,7 +262,7 @@ def main(videoPath):
                     tracePredictedPath(frame, posListX, posListY)
 
             cv2.imshow('frame', frame)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            if cv2.waitKey(100) & 0xFF == ord('q'):
                 break
         else:
             break
@@ -222,12 +277,15 @@ def main(videoPath):
     #print(f"Shot angles {shotAngles} Shots {shots}")
     print(f"Average Angle: {averageAngle}, Average Make Angle: {averageMakeAngle}, Average Miss Angle: {averageMissAngle}")
     print(f"FGM: {fgm}, FGA: {fga}, FG%: {100 * fgm / fga}")
+    showResults(shots, shotAngles)
 
 chooseVideo = True
 PATH = r"E:\Youtube\tiktoks\footage\10 freethrows\PXL_20240812_183026929.TS.mp4"
 if chooseVideo:
     PATH = get_video_path()
 main(PATH)
+shots = [1,0,1,1,0,1,0,0,0,1,1]
+showResults(shots)
 
 # make it work with a webcam - streaming device
 # make it an executable file
