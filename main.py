@@ -78,6 +78,7 @@ def calculateAverageAngle(shotAngles, shots):
         averageAngle = (sum(shotsMadeAngle)+sum(shotsMissedAngle)) / (len(shotsMissedAngle)+len(shotsMadeAngle))
         return averageAngle, averageMakeAngle, averageMissAngle
     except:
+        print("Error in calculating average angle")
         return 0, 0, 0
 def getLongestStreak(array):
     longestStreak = 0
@@ -218,4 +219,10 @@ if chooseVideo:
     PATH = get_video_path()
 main(PATH)
 
+# make it work with a webcam - streaming device
+# make it an executable file
+
+
+#todays goals
+#
 
