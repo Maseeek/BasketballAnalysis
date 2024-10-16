@@ -6,7 +6,11 @@ import math
 import matplotlib.pyplot as plt
 
 dist = lambda x1, y1, x2, y2: (x1-x2)**2 + (y1-y2)**2
-
+PUMPKIN = (33, 121, 250)
+CELADON = (187, 229, 169)
+VANILLA = (177, 246, 252)
+FELDGRAU = (59, 75, 63)
+GREEN = (63, 99, 68)
 def get_video_path():
     root = tk.Tk()
     root.withdraw()
@@ -37,9 +41,9 @@ def getXandYValuesOfClick(frame, windowName):
 
     return click_x, click_y
 def drawHoop(frame, hoopLeft, hoopRight):
-    cv2.circle(frame, hoopLeft, 10, (0, 0, 255), cv2.FILLED)
-    cv2.circle(frame, hoopRight, 10, (0, 0, 255), cv2.FILLED)
-    cv2.line(frame, hoopLeft, hoopRight, (0, 0, 255), 2)
+    cv2.circle(frame, hoopLeft, 10, GREEN, cv2.FILLED)
+    cv2.circle(frame, hoopRight, 10, GREEN, cv2.FILLED)
+    cv2.line(frame, hoopLeft, hoopRight, GREEN, 2)
 
 def calculateAngle(positionListX, positionListY):
     # Calculate differences in coordinates
@@ -103,8 +107,8 @@ def getLongestStreak(array):
 
 def showFrameWithBallCircled(frame, ball):
     if ball is not None:
-        cv2.circle(frame, (ball[0], ball[1]), ball[2], (0, 255, 0), 2)
-        cv2.putText(frame, f"radius {ball[2]}", (ball[0], ball[1]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+        cv2.circle(frame, (ball[0], ball[1]), ball[2], PUMPKIN, 2)
+        cv2.putText(frame, f"radius {ball[2]}", (ball[0], ball[1]), cv2.FONT_HERSHEY_SIMPLEX, 1, PUMPKIN, 2, cv2.LINE_AA)
     cv2.waitKey(1)
 def findBall(frame, prevCircle, radius):
     CONSTANT = 1.2
@@ -130,14 +134,14 @@ def tracePredictedPath(frame, posListX, posListY):
     xList = [item for item in range(widthOfFrame)]
     for i, (posX, posY) in enumerate(zip(posListX, posListY)):
         pos = (posX, posY)
-        cv2.circle(frame, pos, 10, (0, 255, 0), cv2.FILLED)
+        cv2.circle(frame, pos, 10, PUMPKIN, cv2.FILLED)
         if i == 0:
-            cv2.line(frame, pos, pos, (0, 255, 0), 5)
+            cv2.line(frame, pos, pos, PUMPKIN, 5)
         else:
-            cv2.line(frame, pos, (posListX[i - 1], posListY[i - 1]), (0, 255, 0), 5)
+            cv2.line(frame, pos, (posListX[i - 1], posListY[i - 1]), PUMPKIN, 5)
     for x in xList:
         y = int(A * x ** 2 + B * x + C)
-        cv2.circle(frame, (x, y), 2, (255, 0, 255), cv2.FILLED)
+        cv2.circle(frame, (x, y), 2, PUMPKIN, cv2.FILLED)
     cv2.imshow('frame', frame)
 
 import matplotlib.pyplot as plt
@@ -217,8 +221,7 @@ def main(videoPath):
     while cap.isOpened():
         ret, frame = cap.read()
         if fga != 0:
-            cv2.putText(frame, f"FGM: {fgm}, FGA: {fga}, FG%: {100 * fgm / fga}", (50, 100), cv2.FONT_HERSHEY_SIMPLEX,
-                        1, (0, 255, 0), 2, cv2.LINE_AA)
+            cv2.putText(frame, f"FGM: {fgm}, FGA: {fga}, FG%: {100 * fgm / fga}", (50, 100), cv2.FONT_HERSHEY_SIMPLEX,1, VANILLA, 2, cv2.LINE_AA)
 
         if ret:
             basketball = findBall(frame, prevCircle, ballRadius)
@@ -234,13 +237,13 @@ def main(videoPath):
                     posListY.append(center[1])
                     if center[1] < hoopMinHeight:
                         shotInProgress = True
-                        cv2.putText(frame, "Shot in Progress", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2,
+                        cv2.putText(frame, "Shot in Progress", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, VANILLA, 2,
                                     cv2.LINE_AA)
 
                         if len(posListX) > 1 and len(posListY) > 1:
                             angle = calculateAngle(posListX, posListY)
                             cv2.putText(frame, f"Release Angle: {angle}", (50, 150),
-                                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+                                        cv2.FONT_HERSHEY_SIMPLEX, 1, VANILLA, 2, cv2.LINE_AA)
 
             if len(posListX) > 3:
                 if posListY[-1] > hoopMinHeight and shotInProgress:
@@ -292,5 +295,5 @@ showResults(shots)
 
 
 #todays goals
-#
+
 
