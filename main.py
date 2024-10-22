@@ -3,7 +3,7 @@ import numpy as np
 import tkinter as tk
 from tkinter import filedialog
 import math
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 dist = lambda x1, y1, x2, y2: (x1-x2)**2 + (y1-y2)**2
 PUMPKIN = (33, 121, 250)
@@ -219,7 +219,7 @@ def main(videoPath):
     while cap.isOpened():
         ret, frame = cap.read()
         if fga != 0:
-            cv2.putText(frame, f"FGM: {fgm}, FGA: {fga}, FG%: {100 * fgm / fga}", (50, 100), cv2.FONT_HERSHEY_SIMPLEX,1, VANILLA, 2, cv2.LINE_AA)
+            cv2.putText(frame, f"FGM: {fgm}, FGA: {fga}, FG%: {(100 * fgm / fga):.2f}", (50, 100), cv2.FONT_HERSHEY_SIMPLEX,1, VANILLA, 2, cv2.LINE_AA)
 
         if ret:
             basketball = findBall(frame, prevCircle, ballRadius)
@@ -240,7 +240,7 @@ def main(videoPath):
 
                         if len(posListX) > 1 and len(posListY) > 1:
                             angle = calculateAngle(posListX, posListY)
-                            cv2.putText(frame, f"Release Angle: {angle}", (50, 150),
+                            cv2.putText(frame, f"Release Angle: {angle:.2f}", (50, 150),
                                         cv2.FONT_HERSHEY_SIMPLEX, 1, VANILLA, 2, cv2.LINE_AA)
 
             if len(posListX) > 3:
@@ -263,7 +263,7 @@ def main(videoPath):
                     tracePredictedPath(frame, posListX, posListY)
 
             cv2.imshow('frame', frame)
-            if cv2.waitKey(25) & 0xFF == ord('q'): # the delay between showing each frame, if 'q' is pressed, the video will close
+            if cv2.waitKey(1) & 0xFF == ord('q'): # the delay between showing each frame, if 'q' is pressed, the video will close
                 break
         else:
             break
