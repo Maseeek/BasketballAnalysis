@@ -3,7 +3,7 @@ import numpy as np
 import tkinter as tk
 from tkinter import filedialog
 import math
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 dist = lambda x1, y1, x2, y2: (x1-x2)**2 + (y1-y2)**2
 PUMPKIN = (33, 121, 250)
@@ -143,8 +143,6 @@ def tracePredictedPath(frame, posListX, posListY):
         y = int(A * x ** 2 + B * x + C)
         cv2.circle(frame, (x, y), 2, FELDGRAU, cv2.FILLED) # draw the predicted path
     cv2.imshow('frame', frame)
-
-import matplotlib.pyplot as plt
 
 def showResults(shots, shotAngles):
     # Count the number of makes and misses
