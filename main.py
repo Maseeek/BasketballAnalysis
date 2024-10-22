@@ -3,7 +3,7 @@ import numpy as np
 import tkinter as tk
 from tkinter import filedialog
 import math
-import matplotlib.pyplot as plt
+import matplotlib
 
 dist = lambda x1, y1, x2, y2: (x1-x2)**2 + (y1-y2)**2
 PUMPKIN = (33, 121, 250)
