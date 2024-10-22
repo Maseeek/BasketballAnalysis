@@ -3,7 +3,7 @@ import numpy as np
 import tkinter as tk
 from tkinter import filedialog
 import math
-import matplotlib
+#import matplotlib # import matplotlib.pyplot as plt doesnt work rn
 
 dist = lambda x1, y1, x2, y2: (x1-x2)**2 + (y1-y2)**2
 PUMPKIN = (33, 121, 250)
@@ -273,7 +273,7 @@ def main(videoPath):
 
     cap.release()
     cv2.destroyAllWindows()
-    showResults(shots, shotAngles)
+    #showResults(shots, shotAngles) # matplotlib.plyplot cannnot be imported
 
 chooseVideo = True
 PATH = r"E:\Youtube\tiktoks\footage\10 freethrows\PXL_20240812_183026929.TS.mp4"
