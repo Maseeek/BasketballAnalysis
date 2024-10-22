@@ -141,7 +141,7 @@ def tracePredictedPath(frame, posListX, posListY):
             cv2.line(frame, pos, (posListX[i - 1], posListY[i - 1]), PUMPKIN, 5)
     for x in xList:
         y = int(A * x ** 2 + B * x + C)
-        cv2.circle(frame, (x, y), 2, PUMPKIN, cv2.FILLED)
+        cv2.circle(frame, (x, y), 2, FELDGRAU, cv2.FILLED) # draw the predicted path
     cv2.imshow('frame', frame)
 
 import matplotlib.pyplot as plt
@@ -265,7 +265,7 @@ def main(videoPath):
                     tracePredictedPath(frame, posListX, posListY)
 
             cv2.imshow('frame', frame)
-            if cv2.waitKey(100) & 0xFF == ord('q'):
+            if cv2.waitKey(25) & 0xFF == ord('q'): # the delay between showing each frame, if 'q' is pressed, the video will close
                 break
         else:
             break
@@ -275,11 +275,6 @@ def main(videoPath):
 
     cap.release()
     cv2.destroyAllWindows()
-    print(f"Longest Streak: {getLongestStreak(shots)}")
-    averageAngle, averageMakeAngle, averageMissAngle = calculateAverageAngle(shotAngles, shots)
-    #print(f"Shot angles {shotAngles} Shots {shots}")
-    print(f"Average Angle: {averageAngle}, Average Make Angle: {averageMakeAngle}, Average Miss Angle: {averageMissAngle}")
-    print(f"FGM: {fgm}, FGA: {fga}, FG%: {100 * fgm / fga}")
     showResults(shots, shotAngles)
 
 chooseVideo = True
