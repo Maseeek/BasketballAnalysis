@@ -1,1 +1,99 @@
-{}
+{
+    "C:\\Users\\Maseeek\\PycharmProjects\\Basketball Analysis\\NEA VID 1.mp4": {
+        "hoop_left": [
+            1457,
+            98
+        ],
+        "hoop_right": [
+            1567,
+            81
+        ],
+        "makes": 1,
+        "misses": 0,
+        "total_shots": 1
+    },
+    "C:\\Users\\Maseeek\\PycharmProjects\\Basketball Analysis\\NEAVid2.mp4": {
+        "hoop_left": [
+            1541,
+            375
+        ],
+        "hoop_right": [
+            1646,
+            348
+        ],
+        "makes": 0,
+        "misses": 1,
+        "total_shots": 1
+    },
+    "C:\\Users\\Maseeek\\PycharmProjects\\Basketball Analysis\\NEAVid3.mp4": {
+        "hoop_left": [
+            1457,
+            97
+        ],
+        "hoop_right": [
+            1565,
+            78
+        ],
+        "makes": 1,
+        "misses": 0,
+        "total_shots": 1
+    },
+    "C:\\Users\\Maseeek\\PycharmProjects\\Basketball Analysis\\video.mp4": {
+        "hoop_left": [
+            118,
+            541
+        ],
+        "hoop_right": [
+            295,
+            583
+        ],
+        "makes": 1,
+        "misses": 0,
+        "total_shots": 1
+    },
+    "C:\\Users\\Maseeek\\PycharmProjects\\Basketball Analysis\\NEAVid1.mov": {
+        "hoop_left": [
+            1540,
+            375
+        ],
+        "hoop_right": [
+            1645,
+            350
+        ],
+        "makes": 0,
+        "misses": 1,
+        "total_shots": 1
+    },
+    "C:\\Users\\Maseeek\\PycharmProjects\\Basketball Analysis\\NEAVid2.mov": {
+        "hoop_left": [
+            1540,
+            375
+        ],
+        "hoop_right": [
+            1643,
+            346
+        ],
+        "makes": 1,
+        "misses": 0,
+        "total_shots": 1
+    },
+    "C:\\Users\\Maseeek\\PycharmProjects\\Basketball Analysis\\Resources\\Videos\\flipped footage 10 freethrows.mov": {
+        "hoop_left": [
+            181,
+            344
+        ],
+        "hoop_right": [
+            296,
+            357
+        ],
+        "sequence": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1
+        ]
+    }
+}

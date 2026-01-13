@@ -39,7 +39,10 @@ def run_setup(video_dir):
     data = {}
     if os.path.exists(GT_FILE):
         with open(GT_FILE, 'r') as f:
-            data = json.load(f)
+            try:
+                data = json.load(f)
+            except json.JSONDecodeError:
+                data = {}
             
     # Find videos
     extensions = ['*.mp4', '*.avi', '*.mov']
@@ -53,10 +56,14 @@ def run_setup(video_dir):
         video_key = os.path.abspath(video_path)
         
         if video_key in data:
-            print(f"Skipping {video_path} (already in DB).")
-            continue
+            # Check if it's the old format (missing 'sequence')
+            if 'sequence' in data[video_key]:
+                print(f"Skipping {os.path.basename(video_path)} (already setup).")
+                continue
+            else:
+                print(f"Updating format for {os.path.basename(video_path)}...")
             
-        print(f"\n--- Setting up {video_path} ---")
+        print(f"\n--- Setting up {os.path.basename(video_path)} ---")
         cap = cv2.VideoCapture(video_path)
         ret, frame = cap.read()
         cap.release()
@@ -73,19 +80,23 @@ def run_setup(video_dir):
         hoop_right = get_click_coordinates(frame, "Set RIGHT Side of Hoop")
         if hoop_right is None: continue
         
-        try:
-            makes = int(input("Enter actual MAKES: "))
-            misses = int(input("Enter actual MISSES: "))
-        except ValueError:
-            print("Invalid input. Skipping.")
-            continue
+        print("\nEnter Shot Sequence (1=Make, 0=Miss).")
+        print("Example: '101' means Make, then Miss, then Make.")
+        valid_input = False
+        sequence = []
+        
+        while not valid_input:
+            seq_str = input("Sequence: ").strip()
+            if all(c in '01' for c in seq_str):
+                sequence = [int(c) for c in seq_str]
+                valid_input = True
+            else:
+                print("Invalid. Please enter only 1s and 0s (e.g., 1001).")
             
         data[video_key] = {
             "hoop_left": hoop_left,
             "hoop_right": hoop_right,
-            "makes": makes,
-            "misses": misses,
-            "total_shots": makes + misses
+            "sequence": sequence
         }
         
         # Save incrementally
@@ -103,18 +114,21 @@ def run_test():
         
     total_videos = 0
     perfect_videos = 0
-    total_shots_actual = 0
-    total_shots_predicted = 0
-    correct_shots = 0 # This is a rough metric since we don't match specific shots yet
     
-    print(f"\n{'VIDEO':<50} | {'ACTUAL':<10} | {'PREDICTED':<10} | {'STATUS'}")
-    print("-" * 90)
+    # Header
+    print(f"\n{'VIDEO':<40} | {'ACTUAL':<15} | {'PREDICTED':<15} | {'STATUS'}")
+    print("-" * 85)
     
     for video_path, gt in data.items():
         if not os.path.exists(video_path):
-            print(f"Video not found: {video_path}")
+            print(f"Video not found: {os.path.basename(video_path)}")
             continue
             
+        # Support fallback to old format if user didn't re-run setup
+        if 'sequence' not in gt:
+            print(f"{os.path.basename(video_path):<40} | OLD FORMAT     | -               | SKIP")
+            continue
+
         tracker = BasketballTracker(gt['hoop_left'], gt['hoop_right'])
         cap = cv2.VideoCapture(video_path)
         
@@ -125,21 +139,31 @@ def run_test():
             
         cap.release()
         
-        # Scoring
-        actual_str = f"{gt['makes']}/{gt['misses']}"
-        pred_misses = tracker.fga - tracker.fgm
-        pred_str = f"{tracker.fgm}/{pred_misses}"
+        # Compare Sequences
+        actual_seq = gt['sequence']
+        pred_seq = tracker.shots
         
-        match = (gt['makes'] == tracker.fgm) and (gt['misses'] == pred_misses)
-        status = "PASS" if match else "FAIL"
+        actual_str = "".join(map(str, actual_seq))
+        pred_str = "".join(map(str, pred_seq))
         
-        print(f"{os.path.basename(video_path):<50} | {actual_str:<10} | {pred_str:<10} | {status}")
+        # Check strict equality
+        if actual_seq == pred_seq:
+            status = "PASS"
+            match = True
+        else:
+            status = "FAIL"
+            match = False
+        
+        print(f"{os.path.basename(video_path):<40} | {actual_str:<15} | {pred_str:<15} | {status}")
         
         total_videos += 1
         if match: perfect_videos += 1
         
-    print("-" * 90)
-    print(f"Overall Accuracy (Perfect Videos): {perfect_videos}/{total_videos} ({perfect_videos/total_videos*100:.1f}%)" if total_videos > 0 else "No videos tested.")
+    print("-" * 85)
+    if total_videos > 0:
+        print(f"Accuracy: {perfect_videos}/{total_videos} ({perfect_videos/total_videos*100:.1f}%)")
+    else:
+        print("No valid videos tested.")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Basketball CV Test Bench")

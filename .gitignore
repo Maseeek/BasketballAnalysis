@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+Resources/Videos/*.mov
+Resources/Videos/*.mp4
+# Keep the directory but ignore large videos
+!Resources/Videos/.gitkeep

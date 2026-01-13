@@ -5,6 +5,9 @@ from tkinter import filedialog
 import math
 import matplotlib.pyplot as plt
 
+
+#IN THE FUTURE FOR SPEED IMPROVEMENTS WE COULD ONLY LOOK AT A FRAME IF IT IS IN A CERTAIN RADIUS OF THE HOOP 
+# SO THAT WE CAN DETERMINE IF ITS A MAKE OR NOT
 # --- 1. CONFIGURATION & UI STYLING ---
 
 # Modern Color Palette (BGR)
