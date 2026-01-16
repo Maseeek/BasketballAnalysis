@@ -112,26 +112,47 @@ class BasketballTracker:
         """
         basketball = self.find_ball(frame)
         
+        # 1. Detection & Filtering
+        if basketball is not None:
+            new_x, new_y = int(basketball[0]), int(basketball[1])
+            
+            # Physic check: If the ball teleported > 300px, it's likely a false positive
+            if self.center is not None:
+                if dist(new_x, new_y, self.center[0], self.center[1]) > 300**2:
+                     basketball = None # Reject detection
+
         if basketball is not None:
             self.prev_circle = (int(basketball[0]), int(basketball[1]), int(basketball[2]))
             self.center = (self.prev_circle[0], self.prev_circle[1])
             self.radius = self.prev_circle[2]
+            self.ball_lost_count = 0 # Reset counter
             
             if debug:
                 self.show_frame_with_ball_circled(frame, basketball)
+        else:
+            self.ball_lost_count = getattr(self, 'ball_lost_count', 0) + 1
+
+        # 2. Glitch Filtering (User's Idea)
+        # If we Lose the ball for > 20 frames, the shot probably ended or was a glitch
+        if getattr(self, 'ball_lost_count', 0) > 20:
+            if self.shot_in_progress:
+                self.pos_list_x.clear()
+                self.pos_list_y.clear()
+                self.shot_in_progress = False
         
         if debug:
             self.draw_hoop(frame)
 
-        # Shot Logic
+        # 3. Shot Logic
         if self.center is not None and self.cooldown == 0:
             # Check proximity to hoop height (optimization: only track when near tracking zone)
             if self.center[1] <= (self.hoop_min_height + self.radius * 5):
-                self.pos_list_x.append(self.center[0])
-                self.pos_list_y.append(self.center[1])
+                # Don't add duplicate points if ball hasn't moved or was lost
+                if not self.pos_list_x or (self.center[0] != self.pos_list_x[-1]):
+                    self.pos_list_x.append(self.center[0])
+                    self.pos_list_y.append(self.center[1])
                 
-                check_in_progress = self.center[1] < self.hoop_min_height
-                if check_in_progress:
+                if self.center[1] < self.hoop_min_height:
                      self.shot_in_progress = True
                 
                 if debug:
@@ -141,14 +162,12 @@ class BasketballTracker:
                         angle = self.calculate_angle()
                         cv2.putText(frame, f"Release Angle: {angle:.2f}", (50, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, VANILLA, 2, cv2.LINE_AA)
 
-        # Shot Outcome Logic - Only run if we have enough points
+        # 4. Shot Outcome Logic
         if len(self.pos_list_x) > 3:
             # If ball drops below hoop height and shot was in progress
             if self.pos_list_y[-1] > self.hoop_min_height and self.shot_in_progress:
-                # Average x of last 2 points for stability
                 avg_x = (self.pos_list_x[-1] + self.pos_list_x[-2]) / 2
                 
-                # Check if x is within hoop bounds
                 if self.hoop_left[0] < avg_x < self.hoop_right[0]:
                     self.shots.append(1)
                     self.fgm += 1
@@ -157,11 +176,8 @@ class BasketballTracker:
                 self.fga += 1
 
                 self.shot_angles.append(self.calculate_angle())
-                
-                # clear lists
                 self.pos_list_x.clear()
                 self.pos_list_y.clear()
-
                 self.shot_in_progress = False
                 self.cooldown = 30 
             elif debug:
