@@ -1,5 +1,5 @@
 {
-    "C:\\Users\\Maseeek\\PycharmProjects\\Basketball Analysis\\NEA VID 1.mp4": {
+    "Resources/Videos/NEA VID 1.mp4": {
         "hoop_left": [
             1457,
             98
@@ -12,7 +12,7 @@
         "misses": 0,
         "total_shots": 1
     },
-    "C:\\Users\\Maseeek\\PycharmProjects\\Basketball Analysis\\NEAVid2.mp4": {
+    "Resources/Videos/NEAVid2.mp4": {
         "hoop_left": [
             1541,
             375
@@ -25,7 +25,7 @@
         "misses": 1,
         "total_shots": 1
     },
-    "C:\\Users\\Maseeek\\PycharmProjects\\Basketball Analysis\\NEAVid3.mp4": {
+    "Resources/Videos/NEAVid3.mp4": {
         "hoop_left": [
             1457,
             97
@@ -38,7 +38,7 @@
         "misses": 0,
         "total_shots": 1
     },
-    "C:\\Users\\Maseeek\\PycharmProjects\\Basketball Analysis\\video.mp4": {
+    "Resources/Videos/video.mp4": {
         "hoop_left": [
             118,
             541
@@ -51,7 +51,7 @@
         "misses": 0,
         "total_shots": 1
     },
-    "C:\\Users\\Maseeek\\PycharmProjects\\Basketball Analysis\\NEAVid1.mov": {
+    "Resources/Videos/NEAVid1.mov": {
         "hoop_left": [
             1540,
             375
@@ -64,7 +64,7 @@
         "misses": 1,
         "total_shots": 1
     },
-    "C:\\Users\\Maseeek\\PycharmProjects\\Basketball Analysis\\NEAVid2.mov": {
+    "Resources/Videos/NEAVid2.mov": {
         "hoop_left": [
             1540,
             375
@@ -77,7 +77,7 @@
         "misses": 0,
         "total_shots": 1
     },
-    "C:\\Users\\Maseeek\\PycharmProjects\\Basketball Analysis\\Resources\\Videos\\flipped footage 10 freethrows.mov": {
+    "Resources/Videos/flipped footage 10 freethrows.mov": {
         "hoop_left": [
             181,
             344
@@ -96,4 +96,4 @@
             1
         ]
     }
-}
+}
