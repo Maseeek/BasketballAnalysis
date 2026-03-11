@@ -58,11 +58,11 @@ class BasketballTracker:
             
             if x2 > x1 and y2 > y1:
                 roi = gray_frame[y1:y2, x1:x2]
-                blurred_roi = cv2.GaussianBlur(roi, (17, 17), 0)
+                blurred_roi = cv2.GaussianBlur(roi, (7, 7), 0)
                 
                 circles = cv2.HoughCircles(
-                    blurred_roi, cv2.HOUGH_GRADIENT, 1.2, 100,
-                    param1=100, param2=30, 
+                    blurred_roi, cv2.HOUGH_GRADIENT, 1.2, 50,
+                    param1=100, param2=25, 
                     minRadius=self.min_radius, maxRadius=self.max_radius
                 )
                 
@@ -83,10 +83,10 @@ class BasketballTracker:
 
         # 2. Fallback to Full Frame Search if ROI failed or no previous circle
         if chosen is None:
-            blurred_frame = cv2.GaussianBlur(gray_frame, (17, 17), 0)
+            blurred_frame = cv2.GaussianBlur(gray_frame, (7, 7), 0)
             circles = cv2.HoughCircles(
-                blurred_frame, cv2.HOUGH_GRADIENT, 1.2, 100,
-                param1=100, param2=30, 
+                blurred_frame, cv2.HOUGH_GRADIENT, 1.2, 50,
+                param1=100, param2=25, 
                 minRadius=self.min_radius, maxRadius=self.max_radius
             )
             
@@ -116,9 +116,9 @@ class BasketballTracker:
         if basketball is not None:
             new_x, new_y = int(basketball[0]), int(basketball[1])
             
-            # Physic check: If the ball teleported > 300px, it's likely a false positive
+            # Physic check: If the ball teleported > max_radius*15 px, it's likely a false positive
             if self.center is not None:
-                if dist(new_x, new_y, self.center[0], self.center[1]) > 300**2:
+                if dist(new_x, new_y, self.center[0], self.center[1]) > (self.max_radius * 15)**2:
                      basketball = None # Reject detection
 
         if basketball is not None:

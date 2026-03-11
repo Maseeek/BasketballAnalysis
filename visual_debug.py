@@ -2,6 +2,7 @@ import cv2
 import tkinter as tk
 from tkinter import filedialog
 import numpy as np
+import time
 from cv_core import BasketballTracker
 
 # --- 1. CONFIGURATION & UI STYLING ---
@@ -109,17 +110,24 @@ def main():
         print("Setup cancelled.")
         return
 
-    tracker = BasketballTracker(hoop_left, hoop_right)
+    scale = 640.0 / frame.shape[1]
+    scaled_hoop_left = (int(hoop_left[0] * scale), int(hoop_left[1] * scale))
+    scaled_hoop_right = (int(hoop_right[0] * scale), int(hoop_right[1] * scale))
+
+    tracker = BasketballTracker(scaled_hoop_left, scaled_hoop_right)
     cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
 
     SIDEBAR_WIDTH = 320
 
+    start_time = time.time()
+    
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
             break
 
-        stats = tracker.process_frame(frame, debug=True)
+        resized_frame = cv2.resize(frame, (640, int(frame.shape[0] * scale)))
+        stats = tracker.process_frame(resized_frame, debug=True)
         debug_frame = stats['frame']
         
         # --- UI RENDERING ---
@@ -201,7 +209,11 @@ def main():
     cap.release()
     cv2.destroyAllWindows()
     
+    end_time = time.time()
+    total_time = end_time - start_time
+    
     print(f"Final Stats - FGM: {stats['fgm']}, FGA: {stats['fga']}, FG%: {stats['fg_percent']:.2f}%")
+    print(f"Total time taken: {total_time:.2f} seconds")
 
 if __name__ == "__main__":
     main()

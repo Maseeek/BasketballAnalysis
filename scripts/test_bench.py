@@ -133,13 +133,39 @@ def run_test():
             print(f"{os.path.basename(video_path):<40} | OLD FORMAT     | -               | SKIP")
             continue
 
-        tracker = BasketballTracker(gt['hoop_left'], gt['hoop_right'])
         cap = cv2.VideoCapture(video_path)
+        ret, first_frame = cap.read()
+        if not ret:
+            cap.release()
+            continue
+
+        scale = 640.0 / first_frame.shape[1]
+        scaled_hoop_left = (int(gt['hoop_left'][0] * scale), int(gt['hoop_left'][1] * scale))
+        scaled_hoop_right = (int(gt['hoop_right'][0] * scale), int(gt['hoop_right'][1] * scale))
+
+        tracker = BasketballTracker(scaled_hoop_left, scaled_hoop_right)
+        cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
         
+        base_skip = int(1/0.15)  # Following server's default accuracy
+        current_skip_target = base_skip
+        frames_skipped = 0
+
         while cap.isOpened():
             ret, frame = cap.read()
             if not ret: break
-            tracker.process_frame(frame, debug=False)
+
+            if frames_skipped < current_skip_target - 1:
+                frames_skipped += 1
+                continue
+
+            resized_frame = cv2.resize(frame, (640, int(frame.shape[0] * scale)))
+            tracker.process_frame(resized_frame, debug=False)
+
+            if tracker.center is not None:
+                current_skip_target = base_skip
+            else:
+                current_skip_target = min(30, current_skip_target + 2)
+            frames_skipped = 0
             
         cap.release()
         
@@ -165,7 +191,13 @@ def run_test():
         
     print("-" * 85)
     if total_videos > 0:
-        print(f"Accuracy: {perfect_videos}/{total_videos} ({perfect_videos/total_videos*100:.1f}%)")
+        accuracy_pct = (perfect_videos / total_videos) * 100
+        print(f"Accuracy: {perfect_videos}/{total_videos} ({accuracy_pct:.1f}%)")
+        
+        # Regression Threshold: fail the test if accuracy is too low
+        if accuracy_pct < 80.0:
+            print("ERROR: Accuracy fell below 80% regression threshold!")
+            sys.exit(1)
     else:
         print("No valid videos tested.")
 

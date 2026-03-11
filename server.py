@@ -70,10 +70,24 @@ def calculateAverageAngle(shotAngles, shots):
         return 0, 0, 0
 
 def analyze_video(videoPath, hoopLeft, hoopRight, max_frames, accuracy=0.15):
-    tracker = BasketballTracker(hoopLeft, hoopRight)
     cap = cv2.VideoCapture(videoPath)
 
+    ret, first_frame = cap.read()
+    if not ret:
+        cap.release()
+        return {"total_shots": 0, "makes": 0, "misses": 0, "fg_percentage": 0, "longest_streak": 0, "average_angle": 0, "average_make_angle": 0, "average_miss_angle": 0, "shot_angles": [], "shots_results": []}
+
+    scale = 640.0 / first_frame.shape[1]
+    scaled_hoop_left = (int(hoopLeft[0] * scale), int(hoopLeft[1] * scale))
+    scaled_hoop_right = (int(hoopRight[0] * scale), int(hoopRight[1] * scale))
+
+    tracker = BasketballTracker(scaled_hoop_left, scaled_hoop_right)
+    cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+
     frame_count = 0
+    base_skip = int(1/accuracy)
+    current_skip_target = base_skip
+    frames_skipped = 0
 
     while cap.isOpened() and frame_count < max_frames:
         ret, frame = cap.read()
@@ -81,14 +95,20 @@ def analyze_video(videoPath, hoopLeft, hoopRight, max_frames, accuracy=0.15):
             break
 
         frame_count += 1
-        # Skip frames based on accuracy optimization
-        # accuracy = 0.15 means 1/0.15 ~= 6.66 => skip ~6 frames? 
-        # User code: if frame_count % int(1/accuracy) != 0: continue
-        # If accuracy is 0.5 (showAngle=True), 1/0.5 = 2. Process every 2nd frame.
-        if frame_count % int(1/accuracy) != 0: 
+        
+        if frames_skipped < current_skip_target - 1:
+            frames_skipped += 1
             continue
 
-        tracker.process_frame(frame, debug=False)
+        resized_frame = cv2.resize(frame, (640, int(frame.shape[0] * scale)))
+        tracker.process_frame(resized_frame, debug=False)
+
+        if tracker.center is not None:
+            current_skip_target = base_skip
+        else:
+            current_skip_target = min(30, current_skip_target + 2)
+            
+        frames_skipped = 0
 
     cap.release()
 
