@@ -186,11 +186,19 @@ class BasketballTracker:
         if self.cooldown > 0:
             self.cooldown -= 1
             
+        current_release_angle = 0
+        if self.shot_in_progress:
+            current_release_angle = self.calculate_angle()
+            
         return {
             "fgm": self.fgm,
             "fga": self.fga,
             "fg_percent": (100 * self.fgm / self.fga) if self.fga > 0 else 0.0,
-            "frame": frame
+            "frame": frame,
+            "cooldown": self.cooldown,
+            "shot_in_progress": self.shot_in_progress,
+            "current_release_angle": current_release_angle,
+            "shots": self.shots
         }
 
     def calculate_angle(self):
